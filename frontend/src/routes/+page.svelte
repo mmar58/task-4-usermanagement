@@ -19,6 +19,7 @@
     let users = $state<User[]>([]);
     let selectedIds = $state<Set<string>>(new Set());
     let isLoading = $state(true);
+    let isCheckingAuth = $state(true);
     let filterText = $state("");
 
     onMount(() => {
@@ -27,6 +28,7 @@
             goto("/login");
             return;
         }
+        isCheckingAuth = false;
         fetchUsers();
     });
 
@@ -112,6 +114,7 @@
     }
 </script>
 
+{#if !isCheckingAuth}
 <div class="min-h-screen bg-white p-8">
     <div class="max-w-6xl mx-auto space-y-4">
         <!-- Toolbar -->
@@ -241,3 +244,4 @@
         </div>
     </div>
 </div>
+{/if}
