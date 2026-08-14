@@ -24,9 +24,9 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
-        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password) || string.IsNullOrWhiteSpace(dto.Name))
+        if (string.IsNullOrWhiteSpace(dto.Email) || dto.Password == null || string.IsNullOrWhiteSpace(dto.Name))
         {
-            return BadRequest(new { message = "Name, Email and Password are required." });
+            return BadRequest(new { message = "Name and Email are required." });
         }
 
         var user = new User
@@ -56,9 +56,9 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto dto)
     {
-        if (string.IsNullOrWhiteSpace(dto.Email) || string.IsNullOrWhiteSpace(dto.Password))
+        if (string.IsNullOrWhiteSpace(dto.Email) || dto.Password == null)
         {
-            return BadRequest(new { message = "Email and Password are required." });
+            return BadRequest(new { message = "Email is required." });
         }
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email.ToLower());
