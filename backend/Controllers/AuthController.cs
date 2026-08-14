@@ -21,7 +21,6 @@ public class AuthController : ControllerBase
     {
         _context = context;
     }
-
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {

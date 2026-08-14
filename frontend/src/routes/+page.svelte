@@ -6,7 +6,7 @@
     import { Input } from "$lib/components/ui/input";
     import { Checkbox } from "$lib/components/ui/checkbox";
     import { formatDistanceToNow } from "date-fns";
-    import { Lock, Unlock, Trash2, Eraser } from "@lucide/svelte";
+    import { Lock, Unlock, Trash2, Eraser, LogOut } from "@lucide/svelte";
 
     interface User {
         id: string;
@@ -112,6 +112,12 @@
                 return "Unknown";
         }
     }
+
+    function handleLogout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        goto("/login");
+    }
 </script>
 
 {#if !isCheckingAuth}
@@ -160,13 +166,25 @@
                 </Button>
             </div>
 
-            <div class="relative w-64">
-                <Input
-                    type="text"
-                    placeholder="Filter"
-                    bind:value={filterText}
-                    class="h-9 border-gray-200"
-                />
+            <div class="flex items-center space-x-4">
+                <div class="relative w-64">
+                    <Input
+                        type="text"
+                        placeholder="Filter"
+                        bind:value={filterText}
+                        class="h-9 border-gray-200"
+                    />
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    class="h-9 text-gray-600 hover:bg-gray-100"
+                    onclick={handleLogout}
+                    title="Logout"
+                >
+                    <LogOut class="w-4 h-4 mr-2" />
+                    Logout
+                </Button>
             </div>
         </div>
 

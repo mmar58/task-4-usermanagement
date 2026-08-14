@@ -18,11 +18,21 @@ builder.Services.AddOpenApi();
 
 // Configure EF Core with PostgreSQL
 var dbHost = Env.GetString("DB_HOST") ?? "localhost";
+var dbPort = Env.GetString("DB_PORT") ?? "5432";
 var dbName = Env.GetString("DB_NAME") ?? "usermanagement";
 var dbUser = Env.GetString("DB_USER") ?? "postgres";
 var dbPassword = Env.GetString("DB_PASSWORD") ?? "postgres";
 
-var connectionString = $"Host={dbHost};Database={dbName};Username={dbUser};Password={dbPassword}";
+var connectionString = $"Host={dbHost};Port={dbPort};Database={dbName};Username={dbUser};Password={dbPassword}";
+
+var dbCa = Env.GetString("DB_CA");
+if (!string.IsNullOrWhiteSpace(dbCa))
+{
+    var caPath = Path.Combine(Path.GetTempPath(), "db_ca.crt");
+    File.WriteAllText(caPath, dbCa.Replace("\\n", "\n"));
+    connectionString += $";Ssl Mode=Require;RootCertificate={caPath}";
+}
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
@@ -50,11 +60,16 @@ builder.Services.AddAuthentication(options =>
 });
 
 // Configure CORS for SvelteKit frontend
+var appOriginsStr = Env.GetString("APP_ORIGINS");
+var appOrigins = string.IsNullOrWhiteSpace(appOriginsStr) 
+    ? new[] { "http://localhost:5174", "http://127.0.0.1:5174" } 
+    : appOriginsStr.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://127.0.0.1:5173")
+        policy.WithOrigins(appOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
