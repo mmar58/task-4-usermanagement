@@ -21,6 +21,9 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetUsers()
     {
+        var currentUserIdString = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        Guid.TryParse(currentUserIdString, out var currentUserId);
+
         var users = await _context.Users
             .Select(u => new
             {
@@ -28,7 +31,8 @@ public class UsersController : ControllerBase
                 u.Name,
                 u.Email,
                 u.Status,
-                u.LastSeen
+                u.LastSeen,
+                IsCurrentUser = u.Id == currentUserId
             })
             .ToListAsync();
 

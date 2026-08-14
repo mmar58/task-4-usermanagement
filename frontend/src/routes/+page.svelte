@@ -14,6 +14,7 @@
         email: string;
         status: number; // 0 Active, 1 Blocked, 2 Unverified
         lastSeen: string | null;
+        isCurrentUser?: boolean;
     }
 
     let users = $state<User[]>([]);
@@ -246,8 +247,11 @@
                                         />
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="font-medium text-gray-900">
-                                            {user.name}
+                                        <div class="font-medium text-gray-900 flex items-center space-x-2">
+                                            <span>{user.name}</span>
+                                            {#if user.isCurrentUser}
+                                                <span class="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider bg-blue-100 text-blue-700 rounded-full">You</span>
+                                            {/if}
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 text-gray-700"
