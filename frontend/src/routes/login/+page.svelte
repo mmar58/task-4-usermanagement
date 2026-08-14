@@ -20,10 +20,9 @@
 
         try {
             const response = await api.post("/auth/login", { email, password });
-            const { token, user } = response.data;
+            const { token } = response.data;
 
             localStorage.setItem("token", token);
-            localStorage.setItem("user", JSON.stringify(user));
 
             // Redirect to dashboard
             goto("/");

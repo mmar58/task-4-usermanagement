@@ -47,11 +47,21 @@
     }
 
     const filteredUsers = $derived(
-        users.filter(
-            (u) =>
-                u.name.toLowerCase().includes(filterText.toLowerCase()) ||
-                u.email.toLowerCase().includes(filterText.toLowerCase()),
-        ),
+        users
+            .filter(
+                (u) =>
+                    u.name.toLowerCase().includes(filterText.toLowerCase()) ||
+                    u.email.toLowerCase().includes(filterText.toLowerCase()),
+            )
+            .sort((a, b) => {
+                if (!a.lastSeen && !b.lastSeen) return 0;
+                if (!a.lastSeen) return 1;
+                if (!b.lastSeen) return -1;
+                return (
+                    new Date(b.lastSeen).getTime() -
+                    new Date(a.lastSeen).getTime()
+                );
+            }),
     );
 
     const allSelected = $derived(
@@ -115,7 +125,6 @@
 
     function handleLogout() {
         localStorage.removeItem("token");
-        localStorage.removeItem("user");
         goto("/login");
     }
 </script>
