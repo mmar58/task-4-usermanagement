@@ -60,3 +60,4 @@ jobs:
             rm -rf backend
             mv test backend
             # Note: Add restart command here if necessary (e.g., systemctl restart kestrel-backend)
+            pm2 reload test4
