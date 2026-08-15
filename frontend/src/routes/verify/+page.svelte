@@ -72,7 +72,7 @@
                 <div class="pt-6 w-full">
                     <Button
                         class="w-full h-12 text-lg bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg transition-all hover:shadow-blue-500/25"
-                        on:click={() => goto("/login")}
+                        onclick={() => goto("/login")}
                     >
                         Go to Login
                     </Button>
