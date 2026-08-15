@@ -39,14 +39,6 @@ public class UserStatusCheckMiddleware
                     await context.Response.WriteAsJsonAsync(new { message = "Your account has been blocked." });
                     return;
                 }
-                
-                if (user.Status == UserStatus.Unverified)
-                {
-                    context.Response.StatusCode = StatusCodes.Status403Forbidden;
-                    context.Response.ContentType = "application/json";
-                    await context.Response.WriteAsJsonAsync(new { message = "Your account is unverified." });
-                    return;
-                }
             }
         }
 

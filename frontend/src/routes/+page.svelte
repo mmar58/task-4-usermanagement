@@ -12,7 +12,8 @@
         id: string;
         name: string;
         email: string;
-        status: number; // 0 Active, 1 Blocked, 2 Unverified
+        status: number; // 0 Active, 1 Blocked
+        verified: number; // 0 Unverified, 1 Verified
         lastSeen: string | null;
         isCurrentUser?: boolean;
     }
@@ -117,8 +118,6 @@
                 return "Active";
             case 1:
                 return "Blocked";
-            case 2:
-                return "Unverified";
             default:
                 return "Unknown";
         }
@@ -212,6 +211,7 @@
                             </th>
                             <th class="px-4 py-3 font-semibold">Name</th>
                             <th class="px-4 py-3 font-semibold">Email</th>
+                            <th class="px-4 py-3 font-semibold">Verification</th>
                             <th class="px-4 py-3 font-semibold">Status</th>
                             <th class="px-4 py-3 font-semibold">Last seen</th>
                         </tr>
@@ -258,10 +258,21 @@
                                         >{user.email}</td
                                     >
                                     <td class="px-4 py-3">
+                                        {#if user.verified === 1}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                                Verified
+                                            </span>
+                                        {:else}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                Unverified
+                                            </span>
+                                        {/if}
+                                    </td>
+                                    <td class="px-4 py-3">
                                         <span
                                             class={user.status === 0
                                                 ? "text-gray-900"
-                                                : "text-gray-500"}
+                                                : "text-red-600 font-medium"}
                                         >
                                             {getStatusText(user.status)}
                                         </span>

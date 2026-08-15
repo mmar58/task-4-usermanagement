@@ -2,7 +2,7 @@ import axios from 'axios';
 import { goto } from '$app/navigation';
 
 export const api = axios.create({
-    baseURL: 'https://apiusermanagement.anzdevelopers.com/api', // Default ASP.NET Core port
+    baseURL: 'http://localhost:5266/api', //'https://apiusermanagement.anzdevelopers.com/api', // Default ASP.NET Core port
     headers: {
         'Content-Type': 'application/json'
     }

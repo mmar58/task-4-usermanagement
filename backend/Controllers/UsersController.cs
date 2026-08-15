@@ -31,6 +31,7 @@ public class UsersController : ControllerBase
                 u.Name,
                 u.Email,
                 u.Status,
+                u.Verified,
                 u.LastSeen,
                 IsCurrentUser = u.Id == currentUserId
             })

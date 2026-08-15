@@ -16,10 +16,12 @@ namespace backend.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly backend.Services.IEmailService _emailService;
 
-    public AuthController(AppDbContext context)
+    public AuthController(AppDbContext context, backend.Services.IEmailService emailService)
     {
         _context = context;
+        _emailService = emailService;
     }
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
@@ -34,7 +36,9 @@ public class AuthController : ControllerBase
             Name = dto.Name,
             Email = dto.Email.ToLower(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-            Status = UserStatus.Unverified, // Default as requested
+            Status = UserStatus.Active,
+            Verified = 0,
+            VerificationToken = Guid.NewGuid().ToString("N"),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -43,6 +47,7 @@ public class AuthController : ControllerBase
         try
         {
             await _context.SaveChangesAsync();
+            await _emailService.SendVerificationEmailAsync(user.Email, user.Name, user.VerificationToken);
         }
         catch (DbUpdateException ex)
         {
@@ -50,7 +55,7 @@ public class AuthController : ControllerBase
             return BadRequest(new { message = "A user with this email already exists." });
         }
 
-        return Ok(new { message = "Registration successful. Please wait for an active user to verify your account." });
+        return Ok(new { message = "Registration successful. Please check your email to verify your account." });
     }
 
     [HttpPost("login")]
@@ -72,11 +77,6 @@ public class AuthController : ControllerBase
         {
             return StatusCode(403, new { message = "Your account has been blocked." });
         }
-        
-        if (user.Status == UserStatus.Unverified)
-        {
-            return StatusCode(403, new { message = "Your account is unverified. Please wait for an active user to unlock it." });
-        }
 
         // Update LastSeen
         user.LastSeen = DateTime.UtcNow;
@@ -87,8 +87,29 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             token,
-            user = new { user.Id, user.Name, user.Email, user.Status }
+            user = new { user.Id, user.Name, user.Email, user.Status, user.Verified }
         });
+    }
+
+    [HttpPost("verify")]
+    public async Task<IActionResult> VerifyEmail([FromBody] VerifyDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.Token))
+        {
+            return BadRequest(new { message = "Verification token is required." });
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.VerificationToken == dto.Token);
+        if (user == null)
+        {
+            return BadRequest(new { message = "Invalid or expired verification token." });
+        }
+
+        user.Verified = 1;
+        user.VerificationToken = null;
+        await _context.SaveChangesAsync();
+
+        return Ok(new { message = "Email verified successfully.", name = user.Name });
     }
 
     private string GenerateJwtToken(User user)
@@ -126,4 +147,9 @@ public class LoginDto
 {
     public required string Email { get; set; }
     public required string Password { get; set; }
+}
+
+public class VerifyDto
+{
+    public required string Token { get; set; }
 }

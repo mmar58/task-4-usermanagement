@@ -15,6 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddHttpClient<backend.Services.IEmailService, backend.Services.EmailService>();
 
 // Configure EF Core with PostgreSQL
 var dbHost = Env.GetString("DB_HOST") ?? "localhost";
