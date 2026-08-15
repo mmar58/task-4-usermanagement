@@ -1,0 +1,62 @@
+name: Deploy .NET Backend
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Build and Publish
+        run: dotnet publish -c Release -o ./publish
+        working-directory: ./backend
+
+      - name: Zip Backend Bundle
+        run: zip -r backend-deploy.zip backend/publish/
+
+      - name: Clean Test Folder
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.HOST_USER }}
+          password: ${{ secrets.HOST_PASSWORD }}
+          script: |
+            rm -rf /${{ secrets.HOST_USER }}/node/test4/test
+            mkdir -p /${{ secrets.HOST_USER }}/node/test4/test
+
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.HOST_USER }}
+          password: ${{ secrets.HOST_PASSWORD }}
+          source: "backend-deploy.zip"
+          target: "/${{ secrets.HOST_USER }}/node/test4/test"
+
+      - name: Deploy Backend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.HOST_USER }}
+          password: ${{ secrets.HOST_PASSWORD }}
+          script: |
+            cd /${{ secrets.HOST_USER }}/node/test4/test
+            unzip -o backend-deploy.zip
+            rm backend-deploy.zip
+            mv backend/publish/* ./
+            rm -rf backend
+            cd /${{ secrets.HOST_USER }}/node/test4
+            rm -rf backend
+            mv test backend
+            # Note: Add restart command here if necessary (e.g., systemctl restart kestrel-backend)

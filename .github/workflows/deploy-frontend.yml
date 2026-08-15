@@ -1,0 +1,56 @@
+name: Deploy Svelte Frontend
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Install & Prepare Svelte
+        run: npm install
+        working-directory: ./frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./frontend
+
+      - name: Zip frontend Bundle
+        run: zip -r frontend-deploy.zip frontend/build/
+
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.HOST_USER }}
+          password: ${{ secrets.HOST_PASSWORD }}
+          source: "frontend-deploy.zip"
+          target: "/${{ secrets.HOST_USER }}/node/test4"
+
+      - name: Deploy and Restart Nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.HOST_USER }}
+          password: ${{ secrets.HOST_PASSWORD }}
+          script: |
+            cd /${{ secrets.HOST_USER }}/node/test4
+            rm -rf frontend
+            unzip -o frontend-deploy.zip
+            rm frontend-deploy.zip
+            rm -rf /var/www/usermanagement.anzdevelopers.com/*
+            mv frontend/build/* /var/www/usermanagement.anzdevelopers.com/
+            sudo systemctl restart nginx

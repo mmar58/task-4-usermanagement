@@ -6,11 +6,12 @@
     import { api } from "$lib/api";
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
+    import { browser } from "$app/environment";
 
     let email = $state("");
     let password = $state("");
     let rememberMe = $state(false);
-    let errorMessage = $state(page.url.searchParams.get("error") || "");
+    let errorMessage = $state(browser ? page.url.searchParams.get("error") || "" : "");
     let isLoading = $state(false);
 
     async function handleLogin(e: Event) {
@@ -159,8 +160,8 @@
                     class="text-blue-500 hover:underline">Sign up</a
                 ></span
             >
-            <a href="#" class="text-blue-500 hover:underline"
-                >Forgot password?</a
+            <button type="button" class="text-blue-500 hover:underline"
+                >Forgot password?</button
             >
         </div>
     </div>
