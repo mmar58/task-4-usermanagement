@@ -1,5 +1,6 @@
 using backend.Data;
 using backend.Enums;
+using backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -43,42 +44,41 @@ public class UsersController : ControllerBase
     [HttpPut("block")]
     public async Task<IActionResult> BlockUsers([FromBody] List<Guid> userIds)
     {
-        if (userIds == null || !userIds.Any()) return BadRequest("No users specified");
-
-        var users = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
-        foreach (var user in users)
+        return await ProcessUsersActionAsync(userIds, users =>
         {
-            user.Status = UserStatus.Blocked;
-        }
-
-        await _context.SaveChangesAsync();
-        return Ok(new { message = $"{users.Count} users blocked" });
+            users.ForEach(u => u.Status = UserStatus.Blocked);
+        }, "users blocked");
     }
 
     [HttpPut("unblock")]
     public async Task<IActionResult> UnblockUsers([FromBody] List<Guid> userIds)
     {
-        if (userIds == null || !userIds.Any()) return BadRequest("No users specified");
-
-        var users = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
-        foreach (var user in users)
+        return await ProcessUsersActionAsync(userIds, users =>
         {
-            user.Status = UserStatus.Active;
-        }
-
-        await _context.SaveChangesAsync();
-        return Ok(new { message = $"{users.Count} users unblocked/verified" });
+            users.ForEach(u => u.Status = UserStatus.Active);
+        }, "users unblocked/verified");
     }
 
     [HttpDelete]
     public async Task<IActionResult> DeleteUsers([FromBody] List<Guid> userIds)
     {
+        return await ProcessUsersActionAsync(userIds, users =>
+        {
+            _context.Users.RemoveRange(users);
+        }, "users deleted");
+    }
+
+    private async Task<IActionResult> ProcessUsersActionAsync(List<Guid> userIds, Action<List<User>> action, string successMessageSuffix)
+    {
         if (userIds == null || !userIds.Any()) return BadRequest("No users specified");
 
         var users = await _context.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
-        _context.Users.RemoveRange(users);
+        if (users.Any())
+        {
+            action(users);
+            await _context.SaveChangesAsync();
+        }
         
-        await _context.SaveChangesAsync();
-        return Ok(new { message = $"{users.Count} users deleted" });
+        return Ok(new { message = $"{users.Count} {successMessageSuffix}" });
     }
 }
